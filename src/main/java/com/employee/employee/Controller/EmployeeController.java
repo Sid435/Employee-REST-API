@@ -5,6 +5,7 @@ import com.employee.employee.Modal.Employee;
 import com.employee.employee.Service.EmpService;
 import com.employee.employee.Service.UserInfoService;
 import com.employee.employee.Service.jwtService;
+import com.employee.employee.entity.JwtToken;
 import com.employee.employee.entity.UserInfo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -50,7 +51,7 @@ public class EmployeeController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @SecurityRequirement(name = "Bearer Authentication")
     @Operation(description = "Getting the data of an employee by providing their id",
             responses = {
@@ -121,12 +122,15 @@ public class EmployeeController {
 
     }
     @PostMapping("/authenticate")
-    public String authenticateAndGetToken(@RequestBody AuthRequest authRequest){
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
+    public JwtToken authenticateAndGetToken(@RequestBody AuthRequest authRequest){
+        JwtToken token = new JwtToken();
+        token.setEmail(authRequest.getEmail());
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword()));
         if(authentication.isAuthenticated()){
-            return serviceJwt.generateToken(authRequest.getUsername());
+            token.setToken(serviceJwt.generateToken(authRequest.getEmail()));
         }else{
             throw new UsernameNotFoundException("Invalid user request!!");
         }
+        return token;
     }
 }
